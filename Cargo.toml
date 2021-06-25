@@ -1,0 +1,42 @@
+[package]
+name = "ist7920"
+version = "0.1.0"
+edition = "2018"
+categories = ["embedded", "no-std"]
+authors = ["Boris Vinogradov <no111u3@gmail.com>"]
+description = "SPI driver for the IST7920 LCD display controller"
+documentation = "https://docs.rs/ssd1320"
+keywords = ["no-std", "ist7920", "lcd", "embedded", "embedded-hal-driver"]
+readme = "README.md"
+license = "Apache-2.0"
+repository = "https://github.com/no111u3/ist7920"
+exclude = [ "memory.x", "*.bmp", ".cargo", "Embed.toml" ]
+
+[dependencies]
+embedded-hal = "0.2"
+display-interface = "0.4"
+display-interface-spi = "0.4"
+embedded-graphics-core = { version = "0.3", optional = true }
+
+
+[dev-dependencies]
+cortex-m = "0.6.2"
+cortex-m-rt = "0.6.12"
+panic-halt = "0.2.0"
+stm32f4xx-hal = { version = "0.8", features = ["rt", "stm32f401"]}
+rtt-target = { version = "0.2.0", features = ["cortex-m"] }
+panic-rtt-target = { version = "0.1.0", features = ["cortex-m"] }
+embedded-graphics = "0.7"
+# Used to load BMP images in various examples
+tinybmp = "0.3.1"
+
+[features]
+default = ["graphics"]
+graphics = ["embedded-graphics-core"]
+
+[profile.release]
+# Many of these settings are highly recommended or required for embedded work
+codegen-units = 1
+incremental = false
+debug = true
+lto = true
