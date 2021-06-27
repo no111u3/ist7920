@@ -1,11 +1,12 @@
 #![no_std]
 //! Generic SPI interface for display drivers
-pub mod error;
+mod command;
+mod error;
 
+use command::{Booster, Command};
 use error::Error;
 
 use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
-use display_interface_spi::SPIInterfaceNoCS;
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::OutputPin};
 
 /// IST7920 LCD display driver.
@@ -25,39 +26,63 @@ where
 
     /// Initialise the display in one of the available addressing modes.
     /// TODO: Add address setup
-    pub fn init<DELAY>(&mut self, delay: &mut DELAY)
+    pub fn init<DELAY>(&mut self, delay: &mut DELAY) -> Result<(), DisplayError>
     where
         DELAY: DelayMs<u8>,
     {
-        self.interface.send_commands(U8(&[0x76])); // Software reset.
+        Command::SWReset.send(&mut self.interface)?;
         delay.delay_ms(50);
-        self.interface.send_commands(U8(&[0x3c])); // Display Off
-        self.interface.send_commands(U8(&[0x90, 128])); // Set Duty
-        self.interface.send_commands(U8(&[0x30, 16])); // Set Bias
-        self.interface.send_commands(U8(&[0x31, 0x3f])); // Set voltage generate clock
-        self.interface.send_commands(U8(&[0x33, 0x20])); // Power control
+        Command::DisplayOn(false).send(&mut self.interface)?;
+        Command::Duty(128).send(&mut self.interface)?;
+        Command::Bias(16).send(&mut self.interface)?;
+        Command::VoltageClock(0x3f).send(&mut self.interface)?;
+        Command::PowerControl(0x20).send(&mut self.interface)?;
         delay.delay_ms(100);
-        self.interface.send_commands(U8(&[0x33, 0x2c])); // Power control
+        Command::PowerControl(0x2c).send(&mut self.interface)?;
         delay.delay_ms(100);
-        self.interface.send_commands(U8(&[0xfd])); // Set booster
+        Command::Booster(Booster::VddX3).send(&mut self.interface)?;
         delay.delay_ms(100);
-        self.interface.send_commands(U8(&[0x33, 0x2f])); // Power control
+        Command::PowerControl(0x2f).send(&mut self.interface)?;
         delay.delay_ms(200);
-        self.interface.send_commands(U8(&[0x064])); // Display Ctrl: Bit3: SHL 2:ADC 1:EON, 0:REV
+        Command::DisplayControl(false, true, false, false).send(&mut self.interface)?;
 
-        self.interface.send_commands(U8(&[0x074, 0x000, 0x00f])); // AY Window
-        self.interface.send_commands(U8(&[0x075, 0x000, 0x07f])); // AX Window
+        Command::AYWindow(0x0, 0xf).send(&mut self.interface)?;
+        Command::AXWindow(0x0, 0x7f).send(&mut self.interface)?;
 
-        self.interface.send_commands(U8(&[0x040, 64])); // Start line at 64
+        Command::StartLine(64).send(&mut self.interface)?;
+        Command::AYAddress(0).send(&mut self.interface)?;
+        Command::AXAddress(0).send(&mut self.interface)?;
 
-        self.interface.send_commands(U8(&[0x0b1, 110])); // electronic volume
+        Command::Contrast(110).send(&mut self.interface)?;
 
-        self.interface.send_commands(U8(&[0x3d])); // Display on
+        Command::DisplayOn(true).send(&mut self.interface)?;
+
+        Ok(())
     }
 
     /// Send a raw buffer to the display.
     pub fn draw(&mut self, buffer: &[u8]) -> Result<(), DisplayError> {
         self.interface.send_data(U8(&buffer))
+    }
+
+    /// Turn the display on or off. The display can be drawn to and retains all
+    /// of its memory even while off.
+    pub fn set_display_on(&mut self, on: bool) -> Result<(), DisplayError> {
+        Command::DisplayOn(on).send(&mut self.interface)
+    }
+
+    /// Set the position in the framebuffer of the display limiting where any sent data should be
+    /// drawn. This method can be used for changing the affected area on the screen as well
+    /// as (re-)setting the start point of the next `draw` call.
+    pub fn set_draw_area(&mut self, start: (u8, u8), end: (u8, u8)) -> Result<(), DisplayError> {
+        Command::AYWindow(start.0 / 8, end.0 / 8).send(&mut self.interface)?;
+
+        Command::AXWindow(start.0, end.0).send(&mut self.interface)?;
+
+        Command::AXAddress(start.1).send(&mut self.interface)?;
+        Command::AYAddress(start.0 / 8).send(&mut self.interface)?;
+
+        Ok(())
     }
 
     /// Reset the display.

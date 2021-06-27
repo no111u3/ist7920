@@ -53,54 +53,51 @@ fn main() -> ! {
 
     let mut display = Ist7920::new(iface);
 
-    display.reset(&mut res, &mut delay);
+    display.reset(&mut res, &mut delay).ok();
 
-    display.init(&mut delay);
+    display.init(&mut delay).ok();
 
-    /*display.set_draw_area((190, 78), (190 + 83, 78 + 23));
-    for _ in 0..(54 * 44) {
-        display.draw(&[0x00]);
-    }
-    display.set_draw_area((192, 80), (192 + 79, 80 + 19));
-    for i in 0..(50 * 40) {
-        display.draw(&[(i % 4) as u8 | (((i >> 2) % 4) << 2) as u8]);
-    }*/
-
-    for i in 0..(128 * 128) {
-        display.draw(&[i as u8]);
-    }
-
-    //let mut select_figure = 0;
+    let mut select_figure = 0;
     loop {
         delay.delay_ms(500_u16);
-        /*let (begin, end) = match select_figure {
+        let (begin, end) = match select_figure {
             0 => {
                 select_figure = 1;
-                ((10, 10), (89, 89))
+                ((48, 48), (48 + 31, 48 + 31))
             }
 
             1 => {
                 select_figure = 2;
-                ((100, 10), (100 + 79, 89))
+                ((32, 32), (32 + 63, 32 + 63))
             }
             _ => {
                 select_figure = 0;
-                ((180 + 10, 10), (180 + 41, 41))
+                ((24, 24), (24 + 79, 24 + 79))
             }
         };
-        display.set_draw_area(begin, end);
+        display.set_draw_area((0, 0), (127, 127)).ok();
+        for _ in 0..(128 * 128 / 32) {
+            display.draw(&[0x00, 0x00, 0x00, 0x00]);
+        }
+        display.set_draw_area(begin, end).ok();
         for _ in 0..((end.1 - begin.1 + 1) / 16) {
-            for _ in 0..((end.0 - begin.0 + 1) / 2) {
+            for _ in 0..((end.0 - begin.0 + 1) / 16) {
                 display
-                    .draw(&[0x77, 0x77, 0x77, 0x77, 0xff, 0xff, 0xff, 0xff])
+                    .draw(&[
+                        0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xff, 0xff, 0xff, 0xff,
+                        0xff, 0xff, 0xff, 0xff,
+                    ])
                     .ok();
             }
-            for _ in 0..((end.0 - begin.0 + 1) / 2) {
+            for _ in 0..((end.0 - begin.0 + 1) / 16) {
                 display
-                    .draw(&[0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00])
+                    .draw(&[
+                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                    ])
                     .ok();
             }
-        }*/
+        }
         led.toggle().ok();
     }
 }
