@@ -75,10 +75,7 @@ fn main() -> ! {
                 ((24, 24), (24 + 79, 24 + 79))
             }
         };
-        display.set_draw_area((0, 0), (127, 127)).ok();
-        for _ in 0..(128 * 128 / 32) {
-            display.draw(&[0x00, 0x00, 0x00, 0x00]);
-        }
+        display.clear().ok();
         display.set_draw_area(begin, end).ok();
         for _ in 0..((end.1 - begin.1 + 1) / 16) {
             for _ in 0..((end.0 - begin.0 + 1) / 16) {

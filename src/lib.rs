@@ -2,26 +2,45 @@
 //! Generic SPI interface for display drivers
 mod command;
 mod error;
+mod mode;
 
 use command::{Booster, Command};
 use error::Error;
+use mode::BasicMode;
 
 use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::OutputPin};
 
 /// IST7920 LCD display driver.
 #[derive(Copy, Clone, Debug)]
-pub struct Ist7920<DI> {
+pub struct Ist7920<DI, MODE> {
     interface: DI,
+    mode: MODE,
 }
 
-impl<DI> Ist7920<DI>
+impl<DI> Ist7920<DI, BasicMode>
 where
     DI: WriteOnlyDataCommand,
 {
-    /// Create a IST7920 interface
+    /// Create a basic IST7920 interface
     pub fn new(interface: DI) -> Self {
-        Self { interface }
+        Self {
+            interface,
+            mode: BasicMode,
+        }
+    }
+}
+
+impl<DI, MODE> Ist7920<DI, MODE>
+where
+    DI: WriteOnlyDataCommand,
+{
+    /// Convert the display into another interface mode.
+    fn into_mode<MODE2>(self, mode: MODE2) -> Ist7920<DI, MODE2> {
+        Ist7920 {
+            interface: self.interface,
+            mode,
+        }
     }
 
     /// Initialise the display in one of the available addressing modes.
