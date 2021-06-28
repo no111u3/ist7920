@@ -1,11 +1,11 @@
 [package]
 name = "ist7920"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 categories = ["embedded", "no-std"]
 authors = ["Boris Vinogradov <no111u3@gmail.com>"]
 description = "SPI driver for the IST7920 LCD display controller"
-documentation = "https://docs.rs/ssd1320"
+documentation = "https://docs.rs/ist7920"
 keywords = ["no-std", "ist7920", "lcd", "embedded", "embedded-hal-driver"]
 readme = "README.md"
 license = "Apache-2.0"
