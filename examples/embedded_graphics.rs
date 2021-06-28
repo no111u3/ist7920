@@ -16,9 +16,11 @@ use stm32f4xx_hal::{
 
 use embedded_graphics::{
     image::Image,
+    mono_font::{ascii::FONT_6X10, MonoTextStyle},
     pixelcolor::{BinaryColor, Rgb565},
     prelude::*,
     primitives::{Circle, PrimitiveStyleBuilder, Rectangle, Triangle},
+    text::Text,
 };
 
 use tinybmp::Bmp;
@@ -84,7 +86,7 @@ fn main() -> ! {
 
     let mut select_figure = 0;
     loop {
-        delay.delay_ms(500_u16);
+        delay.delay_ms(1000_u16);
         display.clear();
         select_figure = match select_figure {
             0 => {
@@ -110,6 +112,22 @@ fn main() -> ! {
                     .draw(&mut display)
                     .unwrap();
                 1
+            }
+            1 => {
+                let style = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
+                Text::new(
+                    "Hello from Rust!\n\
+                    Message printed\n\
+                    by\n\
+                    embedded_graphics\n\
+                    demo\n\
+                    application\n",
+                    Point::new(20, 30),
+                    style,
+                )
+                .draw(&mut display)
+                .unwrap();
+                2
             }
             _ => {
                 // rust image
