@@ -6,7 +6,7 @@ mod mode;
 
 use command::{Booster, Command};
 use error::Error;
-use mode::BasicMode;
+use mode::{BasicMode, BufferedGraphicsMode};
 
 use display_interface::{DataFormat::U8, DisplayError, WriteOnlyDataCommand};
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::OutputPin};
@@ -41,6 +41,14 @@ where
             interface: self.interface,
             mode,
         }
+    }
+
+    /// Convert the display into a buffered graphics mode, supporting
+    /// [embedded-graphics](https://crates.io/crates/embedded-graphics).
+    ///
+    /// See [BufferedGraphicsMode] for more information.
+    pub fn into_buffered_graphics_mode(self) -> Ist7920<DI, BufferedGraphicsMode> {
+        self.into_mode(BufferedGraphicsMode::new())
     }
 
     /// Initialise the display in one of the available addressing modes.
@@ -102,6 +110,10 @@ where
         Command::AYAddress(start.0 / 8).send(&mut self.interface)?;
 
         Ok(())
+    }
+
+    fn flush_buffer_chunks(interface: &mut DI, buffer: &[u8]) -> Result<(), DisplayError> {
+        interface.send_data(U8(&buffer))
     }
 
     /// Reset the display.

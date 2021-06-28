@@ -1,5 +1,9 @@
 //! Display modes
 
+pub mod buffered_graphics;
+
+pub use buffered_graphics::BufferedGraphicsMode;
+
 use crate::Ist7920;
 
 use display_interface::{DisplayError, WriteOnlyDataCommand};
